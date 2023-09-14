@@ -1,5 +1,4 @@
 import { PasswordHash } from "./security/passwordHash";
-//import { AppDataSource } from "./data-source";
 import { createConnection } from "typeorm";
 import { Database } from "./database";
 import { RegisterDTO } from "./dto/request/register.dto";
