@@ -7,7 +7,8 @@ import * as express from "express";
 import { Request, Response } from "express";
 import { AuthenticationDTO } from "./dto/response/authentication.dto";
 import { UserDTO } from "./dto/response/user.dto";
-import { RequestValidator } from "./security/requestValidator";
+//import { RequestValidator } from "./security/requestValidator";
+import { JWT } from "./security/jwt";
 
 const app = express();
 
@@ -27,8 +28,9 @@ app.post("/register", async (req: Request, resp: Response) => {
     const { username, password, email, repeatPassword, age } = body;
 
     // request validators
-    RequestValidator.passwordValidator(password, repeatPassword);
-    RequestValidator.emailValidator(email);
+    if (password !== repeatPassword) throw Error("Password not equal");
+    if (await Database.userRepository.findOne({ email: email }))
+      throw Error("Email already used");
 
     // save body into user entity
     const user = new User();
@@ -48,7 +50,11 @@ app.post("/register", async (req: Request, resp: Response) => {
     userDTO.age = user.age;
     userDTO.email = user.email;
 
+    const tokenAndRefreshToken = await JWT.generateTokenAndRefreshToken(user);
+
     authenticationDTO.user = userDTO;
+    authenticationDTO.token = tokenAndRefreshToken.token;
+    authenticationDTO.refreshToken = tokenAndRefreshToken.refreshToken;
 
     resp.json(authenticationDTO);
   } catch (error) {
